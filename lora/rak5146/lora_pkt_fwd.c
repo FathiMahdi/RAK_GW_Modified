@@ -1886,9 +1886,6 @@ int main(int argc, char ** argv)
                 return;
             }
 
-            // Write data to the file
-            fprintf(file, "%s\n", data);
-
 
         fprintf(file, "\n\n\n\n\n\n");
         printf("\n##### %s #####\n", stat_timestamp);
