@@ -353,8 +353,10 @@ static int parse_SX130x_configuration(const char * conf_file) {
 
     /* try to parse JSON */
     root_val = json_parse_file_with_comments(conf_file);
-    if (root_val == NULL) {
+    if (root_val == NULL) 
+    {
         MSG("ERROR: %s is not a valid JSON file\n", conf_file);
+        logData("ERROR: %s is not a valid JSON file\n");
         exit(EXIT_FAILURE);
     }
 
@@ -362,9 +364,11 @@ static int parse_SX130x_configuration(const char * conf_file) {
     conf_obj = json_object_get_object(json_value_get_object(root_val), conf_obj_name);
     if (conf_obj == NULL) {
         MSG("INFO: %s does not contain a JSON object named %s\n", conf_file, conf_obj_name);
+        logData("INFO: does not contain a JSON object \n");
         return -1;
     } else {
         MSG("INFO: %s does contain a JSON object named %s, parsing SX1302 parameters\n", conf_file, conf_obj_name);
+        logData("INFO:does contain a JSON object \n");
     }
 
     /* set board configuration */
@@ -372,6 +376,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
     str = json_object_get_string(conf_obj, "com_type");
     if (str == NULL) {
         MSG("ERROR: com_type must be configured in %s\n", conf_file);
+        logData("ERROR: com_type must be configured in \n");
         return -1;
     } else if (!strncmp(str, "SPI", 3) || !strncmp(str, "spi", 3)) {
         boardconf.com_type = LGW_COM_SPI;
@@ -379,6 +384,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         boardconf.com_type = LGW_COM_USB;
     } else {
         MSG("ERROR: invalid com type: %s (should be SPI or USB)\n", str);
+        logData("ERROR: com_type must be configured in\n");
         return -1;
     }
     com_type = boardconf.com_type;
@@ -388,6 +394,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         boardconf.com_path[sizeof boardconf.com_path - 1] = '\0'; /* ensure string termination */
     } else {
         MSG("ERROR: com_path must be configured in %s\n", conf_file);
+        logData("ERROR: com_path must be configured in\n");
         return -1;
     }
     val = json_object_get_value(conf_obj, "lorawan_public"); /* fetch value (if possible) */
@@ -395,6 +402,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         boardconf.lorawan_public = (bool)json_value_get_boolean(val);
     } else {
         MSG("WARNING: Data type for lorawan_public seems wrong, please check\n");
+        logData("WARNING: Data type for lorawan_public seems wrong, please check\n");
         boardconf.lorawan_public = false;
     }
     val = json_object_get_value(conf_obj, "clksrc"); /* fetch value (if possible) */
@@ -402,6 +410,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         boardconf.clksrc = (uint8_t)json_value_get_number(val);
     } else {
         MSG("WARNING: Data type for clksrc seems wrong, please check\n");
+        logData("WARNING: Data type for clksrc seems wrong, please check\n");
         boardconf.clksrc = 0;
     }
     val = json_object_get_value(conf_obj, "full_duplex"); /* fetch value (if possible) */
@@ -409,12 +418,14 @@ static int parse_SX130x_configuration(const char * conf_file) {
         boardconf.full_duplex = (bool)json_value_get_boolean(val);
     } else {
         MSG("WARNING: Data type for full_duplex seems wrong, please check\n");
+        logData("WARNING: Data type for full_duplex seems wrong, please check\n");
         boardconf.full_duplex = false;
     }
     MSG("INFO: com_type %s, com_path %s, lorawan_public %d, clksrc %d, full_duplex %d\n", (boardconf.com_type == LGW_COM_SPI) ? "SPI" : "USB", boardconf.com_path, boardconf.lorawan_public, boardconf.clksrc, boardconf.full_duplex);
     /* all parameters parsed, submitting configuration to the HAL */
     if (lgw_board_setconf(&boardconf) != LGW_HAL_SUCCESS) {
         MSG("ERROR: Failed to configure board\n");
+        logData("ERROR: Failed to configure board\n");
         return -1;
     }
 
@@ -425,6 +436,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
             antenna_gain = (int8_t)json_value_get_number(val);
         } else {
             MSG("WARNING: Data type for antenna_gain seems wrong, please check\n");
+            logData("WARNING: Data type for antenna_gain seems wrong, please check\n");
             antenna_gain = 0;
         }
     }
@@ -440,12 +452,14 @@ static int parse_SX130x_configuration(const char * conf_file) {
             tsconf.enable = (bool)json_value_get_boolean(val);
         } else {
             MSG("WARNING: Data type for fine_timestamp.enable seems wrong, please check\n");
+            logData("WARNING: Data type for fine_timestamp.enable seems wrong, please check\n");
             tsconf.enable = false;
         }
         if (tsconf.enable == true) {
             str = json_object_get_string(conf_ts_obj, "mode");
             if (str == NULL) {
                 MSG("ERROR: fine_timestamp.mode must be configured in %s\n", conf_file);
+                logData("ERROR: fine_timestamp.mode must be configured in\n");
                 return -1;
             } else if (!strncmp(str, "high_capacity", 13) || !strncmp(str, "HIGH_CAPACITY", 13)) {
                 tsconf.mode = LGW_FTIME_MODE_HIGH_CAPACITY;
@@ -453,6 +467,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
                 tsconf.mode = LGW_FTIME_MODE_ALL_SF;
             } else {
                 MSG("ERROR: invalid fine timestamp mode: %s (should be high_capacity or all_sf)\n", str);
+                logData("ERROR: invalid fine timestamp mode: (should be high_capacity or all_sf)\n\n");
                 return -1;
             }
             MSG("INFO: Configuring precision timestamp with %s mode\n", str);
@@ -460,10 +475,12 @@ static int parse_SX130x_configuration(const char * conf_file) {
             /* all parameters parsed, submitting configuration to the HAL */
             if (lgw_ftime_setconf(&tsconf) != LGW_HAL_SUCCESS) {
                 MSG("ERROR: Failed to configure fine timestamp\n");
+                logData("ERROR: Failed to configure fine timestamp\n\n");
                 return -1;
             }
         } else {
             MSG("INFO: Configuring legacy timestamp\n");
+            logData("INFO: Configuring legacy timestamp\n");
         }
     }
 
@@ -472,6 +489,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
     conf_sx1261_obj = json_object_get_object(conf_obj, "sx1261_conf"); /* fetch value (if possible) */
     if (conf_sx1261_obj == NULL) {
         MSG("INFO: no configuration for SX1261\n");
+        logData("INFO: no configuration for SX1261\n");
     } else {
         /* Global SX1261 configuration */
         str = json_object_get_string(conf_sx1261_obj, "spi_path");
@@ -480,12 +498,14 @@ static int parse_SX130x_configuration(const char * conf_file) {
             sx1261conf.spi_path[sizeof sx1261conf.spi_path - 1] = '\0'; /* ensure string termination */
         } else {
             MSG("INFO: SX1261 spi_path is not configured in %s\n", conf_file);
+            logData("INFO: SX1261 spi_path is not configured in \n");
         }
         val = json_object_get_value(conf_sx1261_obj, "rssi_offset"); /* fetch value (if possible) */
         if (json_value_get_type(val) == JSONNumber) {
             sx1261conf.rssi_offset = (int8_t)json_value_get_number(val);
         } else {
             MSG("WARNING: Data type for sx1261_conf.rssi_offset seems wrong, please check\n");
+            logData("WARNING: Data type for sx1261_conf.rssi_offset seems wrong, please check\n");
             sx1261conf.rssi_offset = 0;
         }
 
@@ -493,6 +513,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         conf_scan_obj = json_object_get_object(conf_sx1261_obj, "spectral_scan"); /* fetch value (if possible) */
         if (conf_scan_obj == NULL) {
             MSG("INFO: no configuration for Spectral Scan\n");
+            logData("INFO: no configuration for Spectral Scan\n");
         } else {
             val = json_object_get_value(conf_scan_obj, "enable"); /* fetch value (if possible) */
             if (json_value_get_type(val) == JSONBoolean) {
@@ -500,11 +521,13 @@ static int parse_SX130x_configuration(const char * conf_file) {
                 spectral_scan_params.enable = (bool)json_value_get_boolean(val);
             } else {
                 MSG("WARNING: Data type for spectral_scan.enable seems wrong, please check\n");
+                logData("WARNING: Data type for spectral_scan.enable seems wrong, please check\n");
             }
             if (spectral_scan_params.enable == true) {
                 /* Enable the sx1261 radio hardware configuration to allow spectral scan */
                 sx1261conf.enable = true;
                 MSG("INFO: Spectral Scan with SX1261 is enabled\n");
+                logData("INFO: Spectral Scan with SX1261 is enabled\n");
 
                 /* Get Spectral Scan Parameters */
                 val = json_object_get_value(conf_scan_obj, "freq_start"); /* fetch value (if possible) */
@@ -512,24 +535,28 @@ static int parse_SX130x_configuration(const char * conf_file) {
                     spectral_scan_params.freq_hz_start = (uint32_t)json_value_get_number(val);
                 } else {
                     MSG("WARNING: Data type for spectral_scan.freq_start seems wrong, please check\n");
+                    logData("WARNING: Data type for spectral_scan.freq_start seems wrong, please check\n");
                 }
                 val = json_object_get_value(conf_scan_obj, "nb_chan"); /* fetch value (if possible) */
                 if (json_value_get_type(val) == JSONNumber) {
                     spectral_scan_params.nb_chan = (uint8_t)json_value_get_number(val);
                 } else {
                     MSG("WARNING: Data type for spectral_scan.nb_chan seems wrong, please check\n");
+                    logData("WARNING: Data type for spectral_scan.nb_chan seems wrong, please check\n");
                 }
                 val = json_object_get_value(conf_scan_obj, "nb_scan"); /* fetch value (if possible) */
                 if (json_value_get_type(val) == JSONNumber) {
                     spectral_scan_params.nb_scan = (uint16_t)json_value_get_number(val);
                 } else {
                     MSG("WARNING: Data type for spectral_scan.nb_scan seems wrong, please check\n");
+                    logData("WARNING: Data type for spectral_scan.nb_scan seems wrong, please check\n");
                 }
                 val = json_object_get_value(conf_scan_obj, "pace_s"); /* fetch value (if possible) */
                 if (json_value_get_type(val) == JSONNumber) {
                     spectral_scan_params.pace_s = (uint32_t)json_value_get_number(val);
                 } else {
                     MSG("WARNING: Data type for spectral_scan.pace_s seems wrong, please check\n");
+                    logData("WARNING: Data type for spectral_scan.pace_s seems wrong, please check\n");
                 }
             }
         }
@@ -538,23 +565,27 @@ static int parse_SX130x_configuration(const char * conf_file) {
         conf_lbt_obj = json_object_get_object(conf_sx1261_obj, "lbt"); /* fetch value (if possible) */
         if (conf_lbt_obj == NULL) {
             MSG("INFO: no configuration for LBT\n");
+            logData("INFO: no configuration for LBT\n");
         } else {
             val = json_object_get_value(conf_lbt_obj, "enable"); /* fetch value (if possible) */
             if (json_value_get_type(val) == JSONBoolean) {
                 sx1261conf.lbt_conf.enable = (bool)json_value_get_boolean(val);
             } else {
                 MSG("WARNING: Data type for lbt.enable seems wrong, please check\n");
+                logData("WARNING: Data type for lbt.enable seems wrong, please check\n");
             }
             if (sx1261conf.lbt_conf.enable == true) {
                 /* Enable the sx1261 radio hardware configuration to allow spectral scan */
                 sx1261conf.enable = true;
                 MSG("INFO: Listen-Before-Talk with SX1261 is enabled\n");
+                logData("INFO: Listen-Before-Talk with SX1261 is enabled\n");
 
                 val = json_object_get_value(conf_lbt_obj, "rssi_target"); /* fetch value (if possible) */
                 if (json_value_get_type(val) == JSONNumber) {
                     sx1261conf.lbt_conf.rssi_target = (int8_t)json_value_get_number(val);
                 } else {
                     MSG("WARNING: Data type for lbt.rssi_target seems wrong, please check\n");
+                    logData("WARNING: Data type for lbt.rssi_target seems wrong, please check\n");
                     sx1261conf.lbt_conf.rssi_target = 0;
                 }
                 /* set LBT channels configuration */
@@ -562,11 +593,13 @@ static int parse_SX130x_configuration(const char * conf_file) {
                 if (conf_lbtchan_array != NULL) {
                     sx1261conf.lbt_conf.nb_channel = json_array_get_count(conf_lbtchan_array);
                     MSG("INFO: %u LBT channels configured\n", sx1261conf.lbt_conf.nb_channel);
+                    logData("INFO: LBT channels configured\n");
                 }
                 for (i = 0; i < (int)sx1261conf.lbt_conf.nb_channel; i++) {
                     /* Sanity check */
                     if (i >= LGW_LBT_CHANNEL_NB_MAX) {
                         MSG("ERROR: LBT channel %d not supported, skip it\n", i);
+                        logData("ERROR: LBT channel not supported, skip it\n\n");
                         break;
                     }
                     /* Get LBT channel configuration object from array */
@@ -647,6 +680,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         /* all parameters parsed, submitting configuration to the HAL */
         if (lgw_sx1261_setconf(&sx1261conf) != LGW_HAL_SUCCESS) {
             MSG("ERROR: Failed to configure the SX1261 radio\n");
+            logData("ERROR: Failed to configure the SX1261 radio\n");
             return -1;
         }
     }
@@ -658,6 +692,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
         val = json_object_get_value(conf_obj, param_name); /* fetch value (if possible) */
         if (json_value_get_type(val) != JSONObject) {
             MSG("INFO: no configuration for radio %i\n", i);
+
             continue;
         }
         /* there is an object to configure that radio, let's parse it */
@@ -1517,6 +1552,7 @@ int main(int argc, char ** argv)
     }
 
     /* display version informations */
+    logData("\n*** Packet Forwarder ***\n);
     MSG("*** Packet Forwarder ***\nVersion: " VERSION_STRING "\n");
     MSG("*** SX1302 HAL library version info ***\n%s\n***\n", lgw_version_info());
 
@@ -1543,6 +1579,7 @@ int main(int argc, char ** argv)
         x = parse_debug_configuration(conf_fname);
         if (x != 0) {
             MSG("INFO: no debug configuration\n");
+            logData("INFO: no debug configuration\n");
         }
     } else {
         MSG("ERROR: [main] failed to find any configuration file named %s\n", conf_fname);
@@ -1604,6 +1641,7 @@ int main(int argc, char ** argv)
     }
     if (q == NULL) {
         MSG("ERROR: [up] failed to open socket to any of server %s addresses (port %s)\n", serv_addr, serv_port_up);
+        logData("ERROR: [up] failed to open socket to any of server  addresses");
         i = 1;
         for (q=result; q!=NULL; q=q->ai_next) {
             getnameinfo(q->ai_addr, q->ai_addrlen, host_name, sizeof host_name, port_name, sizeof port_name, NI_NUMERICHOST);
@@ -1688,16 +1726,19 @@ int main(int argc, char ** argv)
     i = pthread_create(&thrid_up, NULL, (void * (*)(void *))thread_up, NULL);
     if (i != 0) {
         MSG("ERROR: [main] impossible to create upstream thread\n");
+        logData("ERROR: [main] impossible to create upstream thread\n");
         exit(EXIT_FAILURE);
     }
     i = pthread_create(&thrid_down, NULL, (void * (*)(void *))thread_down, NULL);
     if (i != 0) {
         MSG("ERROR: [main] impossible to create downstream thread\n");
+        logData("ERROR: [main] impossible to create downstream thread\n");
         exit(EXIT_FAILURE);
     }
     i = pthread_create(&thrid_jit, NULL, (void * (*)(void *))thread_jit, NULL);
     if (i != 0) {
         MSG("ERROR: [main] impossible to create JIT thread\n");
+        logData("ERROR: [main] impossible to create JIT thread\n");
         exit(EXIT_FAILURE);
     }
 
@@ -1706,6 +1747,7 @@ int main(int argc, char ** argv)
         i = pthread_create(&thrid_ss, NULL, (void * (*)(void *))thread_spectral_scan, NULL);
         if (i != 0) {
             MSG("ERROR: [main] impossible to create Spectral Scan thread\n");
+            logData("ERROR: [main] impossible to create Spectral Scan thread\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -1715,11 +1757,13 @@ int main(int argc, char ** argv)
         i = pthread_create(&thrid_gps, NULL, (void * (*)(void *))thread_gps, NULL);
         if (i != 0) {
             MSG("ERROR: [main] impossible to create GPS thread\n");
+           logData("ERROR: [main] impossible to create GPS thread\n");
             exit(EXIT_FAILURE);
         }
         i = pthread_create(&thrid_valid, NULL, (void * (*)(void *))thread_valid, NULL);
         if (i != 0) {
             MSG("ERROR: [main] impossible to create validation thread\n");
+            logData("ERROR: [main] impossible to create validation thread\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -1830,17 +1874,45 @@ int main(int argc, char ** argv)
         }
 
         /* display a report */
+            // Open the file in append mode, create if it doesn't exist
+            FILE *file = fopen("/home/pi/fathi/lora.txt", "a+");
+
+            if (file == NULL)
+            {
+                // Handle error if the file couldn't be opened
+                perror("Error opening file");
+                return;
+            }
+
+            // Write data to the file
+            fprintf(file, "%s\n", data);
+
+
+        fprintf(file, "\n\n\n\n\n\n");
         printf("\n##### %s #####\n", stat_timestamp);
+        fprintf(file, "\n##### %s #####\n", stat_timestamp);
         printf("### [UPSTREAM] ###\n");
+        fprintf(file, "### [UPSTREAM] ###\n");
         printf("# RF packets received by concentrator: %u\n", cp_nb_rx_rcv);
+        fprintf(file, "# RF packets received by concentrator: %u\n", cp_nb_rx_rcv);
         printf("# CRC_OK: %.2f%%, CRC_FAIL: %.2f%%, NO_CRC: %.2f%%\n", 100.0 * rx_ok_ratio, 100.0 * rx_bad_ratio, 100.0 * rx_nocrc_ratio);
+        fprintf(file, "# CRC_OK: %.2f%%, CRC_FAIL: %.2f%%, NO_CRC: %.2f%%\n", 100.0 * rx_ok_ratio, 100.0 * rx_bad_ratio, 100.0 * rx_nocrc_ratio);
         printf("# RF packets forwarded: %u (%u bytes)\n", cp_up_pkt_fwd, cp_up_payload_byte);
+        fprintf(file, "# RF packets forwarded: %u (%u bytes)\n", cp_up_pkt_fwd, cp_up_payload_byte);
         printf("# PUSH_DATA datagrams sent: %u (%u bytes)\n", cp_up_dgram_sent, cp_up_network_byte);
+        fprintf(file, "# PUSH_DATA datagrams sent: %u (%u bytes)\n", cp_up_dgram_sent, cp_up_network_byte);
         printf("# PUSH_DATA acknowledged: %.2f%%\n", 100.0 * up_ack_ratio);
+        fprintf(file, "# PUSH_DATA acknowledged: %.2f%%\n", 100.0 * up_ack_ratio);
         printf("### [DOWNSTREAM] ###\n");
+        fprintf(file, "### [DOWNSTREAM] ###\n");
         printf("# PULL_DATA sent: %u (%.2f%% acknowledged)\n", cp_dw_pull_sent, 100.0 * dw_ack_ratio);
+        fprintf(file, "# PULL_DATA sent: %u (%.2f%% acknowledged)\n", cp_dw_pull_sent, 100.0 * dw_ack_ratio);
         printf("# PULL_RESP(onse) datagrams received: %u (%u bytes)\n", cp_dw_dgram_rcv, cp_dw_network_byte);
+        fprintf(file, "# PULL_RESP(onse) datagrams received: %u (%u bytes)\n", cp_dw_dgram_rcv, cp_dw_network_byte);
         printf("# RF packets sent to concentrator: %u (%u bytes)\n", (cp_nb_tx_ok+cp_nb_tx_fail), cp_dw_payload_byte);
+        fprintf(file, "# RF packets sent to concentrator: %u (%u bytes)\n", (cp_nb_tx_ok+cp_nb_tx_fail), cp_dw_payload_byte);
+        // Close the file
+        fclose(file);
         printf("# TX errors: %u\n", cp_nb_tx_fail);
         if (cp_nb_tx_requested != 0 ) {
             printf("# TX rejected (collision packet): %.2f%% (req:%u, rej:%u)\n", 100.0 * cp_nb_tx_rejected_collision_packet / cp_nb_tx_requested, cp_nb_tx_requested, cp_nb_tx_rejected_collision_packet);
