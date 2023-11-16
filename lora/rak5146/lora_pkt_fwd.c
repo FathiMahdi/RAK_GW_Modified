@@ -275,7 +275,7 @@ static spectral_scan_t spectral_scan_params = {
 
 static void usage(void);
 
-static void logData(const char *data)
+static void logData(const char *data);
 
 static void sig_handler(int sigio);
 
