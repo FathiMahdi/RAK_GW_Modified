@@ -1585,6 +1585,7 @@ int main(int argc, char ** argv)
         }
     } else {
         MSG("ERROR: [main] failed to find any configuration file named %s\n", conf_fname);
+        logData("ERROR: [main] failed to find any configuration file named \n");
         exit(EXIT_FAILURE);
     }
     /* load local configuration files */
@@ -1596,6 +1597,7 @@ int main(int argc, char ** argv)
         }
     } else {
         MSG("ERROR: [main] failed to find any configuration file named %s\n", local_conf_fname);
+        logData("ERROR: [main] failed to find any configuration file named \n");
         exit(EXIT_FAILURE);
     }
 
@@ -1603,11 +1605,13 @@ int main(int argc, char ** argv)
     if (gps_tty_path[0] != '\0') { /* do not try to open GPS device if no path set */
         i = lgw_gps_enable(gps_tty_path, "ubx7", 0, &gps_tty_fd); /* HAL only supports u-blox 7 for now */
         if (i != LGW_GPS_SUCCESS) {
-            printf("WARNING: [main] impossible to open %s for GPS sync (check permissions)\n", gps_tty_path);
+            printf("WARNING: [main] impossible to open for GPS sync (check permissions)\n", gps_tty_path);
+            logData("WARNING: [main] impossible to open for GPS sync (check permissions)\n");
             gps_enabled = false;
             gps_ref_valid = false;
         } else {
             printf("INFO: [main] TTY port %s open for GPS synchronization\n", gps_tty_path);
+            logData("INFO: [main] TTY port open for GPS synchronization\n");
             gps_enabled = true;
             gps_ref_valid = false;
         }
@@ -1632,6 +1636,7 @@ int main(int argc, char ** argv)
     i = getaddrinfo(serv_addr, serv_port_up, &hints, &result);
     if (i != 0) {
         MSG("ERROR: [up] getaddrinfo on address %s (PORT %s) returned %s\n", serv_addr, serv_port_up, gai_strerror(i));
+        logData("ERROR: [up] getaddrinfo on address \n\n");
         exit(EXIT_FAILURE);
     }
 
@@ -1657,6 +1662,7 @@ int main(int argc, char ** argv)
     i = connect(sock_up, q->ai_addr, q->ai_addrlen);
     if (i != 0) {
         MSG("ERROR: [up] connect returned %s\n", strerror(errno));
+        logData("ERROR: [up] connect returned\n");
         exit(EXIT_FAILURE);
     }
     freeaddrinfo(result);
@@ -1689,6 +1695,7 @@ int main(int argc, char ** argv)
     i = connect(sock_down, q->ai_addr, q->ai_addrlen);
     if (i != 0) {
         MSG("ERROR: [down] connect returned %s\n", strerror(errno));
+        logData("ERROR: [down] connect returned\n");
         exit(EXIT_FAILURE);
     }
     freeaddrinfo(result);
@@ -1697,6 +1704,7 @@ int main(int argc, char ** argv)
         /* Board reset */
         if (system("./reset_lgw.sh start") != 0) {
             printf("ERROR: failed to reset SX1302, check your reset_lgw.sh script\n");
+            logData("ERROR: failed to reset SX1302, check your reset_lgw.sh script\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -1720,6 +1728,8 @@ int main(int argc, char ** argv)
     i = lgw_get_eui(&eui);
     if (i != LGW_HAL_SUCCESS) {
         printf("ERROR: failed to get concentrator EUI\n");
+        logData("ERROR: failed to get concentrator EUI\n");
+        
     } else {
         printf("INFO: concentrator EUI: 0x%016" PRIx64 "\n", eui);
     }
@@ -2082,6 +2092,7 @@ void thread_up(void) {
     i = setsockopt(sock_up, SOL_SOCKET, SO_RCVTIMEO, (void *)&push_timeout_half, sizeof push_timeout_half);
     if (i != 0) {
         MSG("ERROR: [up] setsockopt returned %s\n", strerror(errno));
+        logData("ERROR: [up] setsockopt returned \n");
         exit(EXIT_FAILURE);
     }
 
