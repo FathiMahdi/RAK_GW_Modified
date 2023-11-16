@@ -275,6 +275,8 @@ static spectral_scan_t spectral_scan_params = {
 
 static void usage(void);
 
+static void logData(const char *data)
+
 static void sig_handler(int sigio);
 
 static int parse_SX130x_configuration(const char * conf_file);
