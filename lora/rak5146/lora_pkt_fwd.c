@@ -1554,7 +1554,7 @@ int main(int argc, char ** argv)
     }
 
     /* display version informations */
-    logData("\n*** Packet Forwarder ***\n);
+    logData("\n*** Packet Forwarder ***\n");
     MSG("*** Packet Forwarder ***\nVersion: " VERSION_STRING "\n");
     MSG("*** SX1302 HAL library version info ***\n%s\n***\n", lgw_version_info());
 
