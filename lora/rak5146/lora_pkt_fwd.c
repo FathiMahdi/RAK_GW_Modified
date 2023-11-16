@@ -3395,6 +3395,25 @@ static void modify_os_time(const uint32_t ppm_tstamp)
 
 /* -------------------------------------------------------------------------- */
 /* --- THREAD 4: PARSE GPS MESSAGE AND KEEP GATEWAY IN SYNC ----------------- */
+static void logData(const char *data)
+{
+    // Open the file in append mode, create if it doesn't exist
+    FILE *file = fopen("/home/pi/fathi/lora.txt", "a+");
+
+    if (file == NULL)
+    {
+        // Handle error if the file couldn't be opened
+        perror("Error opening file");
+        return;
+    }
+
+    // Write data to the file
+    fprintf(file, "%s\n", data);
+
+    // Close the file
+    fclose(file);
+}
+
 
 static void gps_process_sync(void) {
     struct timespec gps_time;
