@@ -194,4 +194,3 @@ timezone="Local"
   #
   # This API is provided by ChirpStack Application Server.
   server="http://localhost:8003"
-
